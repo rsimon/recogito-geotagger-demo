@@ -9,6 +9,7 @@ import { getDocumentInContext, getInstalledPlugins } from '@backend/helpers';
 import { getCollection } from '@backend/crud/collections';
 import PluginRegistry from '@components/Plugins/PluginRegistry';
 import { isOpenJoinEditFromContext } from '@backend/helpers';
+import { getMyProfile } from '@backend/crud';
 
 const lang = getLangFromUrl(Astro.url);
 
@@ -57,10 +58,13 @@ if (document.data.collection_id) {
   }
 }
 
-const pluginConfigs = await getInstalledPlugins(supabase, document.data.context.project_id);
+const pluginConfigs = await getInstalledPlugins(
+  supabase,
+  document.data.context.project_id
+);
 if (pluginConfigs.error || !pluginConfigs.data) {
   const error = await fetch(`${Astro.url}/500`);
-  return new Response(error.body, { headers: error.headers, status: 500 }); 
+  return new Response(error.body, { headers: error.headers, status: 500 });
 }
 
 // Compute realtime channel key
@@ -80,8 +84,10 @@ if (document.data.content_type === 'text/plain') {
   extensionPoint = 'annotation.text';
 } else if (document.data.content_type === 'application/pdf') {
   viewer = 'PDF';
-  extensionPoint = 'annotation.text';
-} else if (document.data.meta_data?.protocol === 'IIIF_IMAGE' || document.data.meta_data?.protocol === 'IIIF_PRESENTATION') {
+} else if (
+  document.data.meta_data?.protocol === 'IIIF_IMAGE' ||
+  document.data.meta_data?.protocol === 'IIIF_PRESENTATION'
+) {
   viewer = 'OPENSEADRAGON';
   extensionPoint = 'annotation.image';
 } else {
@@ -90,7 +96,16 @@ if (document.data.content_type === 'text/plain') {
   return new Response(error.body, { headers: error.headers, status: 500 });
 }
 
-const plugins = PluginRegistry.resolvePlugins(pluginConfigs.data, extensionPoint);
+const plugins = PluginRegistry.resolvePlugins(
+  pluginConfigs.data,
+  extensionPoint
+);
+
+const profile = await getMyProfile(supabase);
+if (profile.error || !profile.data) {
+  const error = await fetch(`${Astro.url}/500`);
+  return new Response(error.body, { headers: error.headers, status: 500 });
+}
 ---
 
 <BaseLayout title={document.data.name}>
@@ -108,6 +123,7 @@ const plugins = PluginRegistry.resolvePlugins(pluginConfigs.data, extensionPoint
         document={document.data}
         channelId={channelId}
         plugins={plugins}
+        me={profile.data}
       />
     ) : (
       <TextAnnotation
@@ -117,14 +133,14 @@ const plugins = PluginRegistry.resolvePlugins(pluginConfigs.data, extensionPoint
         channelId={channelId}
         plugins={plugins}
         styleSheet={styleSheet}
+        me={profile.data}
       />
     )
   }
 </BaseLayout>
 
 <style>
-  html,
-  body {
-    height: 100%;
+  html, body {
+    height: 100%
   }
 </style>

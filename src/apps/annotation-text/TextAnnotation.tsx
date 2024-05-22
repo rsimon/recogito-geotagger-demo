@@ -1,27 +1,43 @@
 import { Annotorious } from '@annotorious/react';
 import { type PluginInstallationConfig, PluginProvider } from '@components/Plugins';
 import { TextAnnotationDesktop } from './TextAnnotationDesktop';
-import type { DocumentInTaggedContext, Translations } from 'src/Types';
+import type { DocumentWithContext, MyProfile, Translations } from 'src/Types';
+import {
+  AuthorColorProvider,
+  ColorState,
+  FilterState,
+} from '@components/AnnotationDesktop';
 
 export interface TextAnnotationProps {
-  i18n: Translations;
-
-  document: DocumentInTaggedContext;
 
   channelId: string;
+
+  document: DocumentWithContext;
+
+  i18n: Translations;
+
+  me: MyProfile;
 
   plugins: PluginInstallationConfig[];
 
   styleSheet?: string;
+
 }
 
-/** Wraps the actual text annotation desktop, so we can access Annotorious context **/
 export const TextAnnotation = (props: TextAnnotationProps) => {
+
   return (
     <PluginProvider plugins={props.plugins}>
-      <Annotorious>
-        <TextAnnotationDesktop {...props} />
-      </Annotorious>
+      <AuthorColorProvider>
+        <FilterState>
+          <ColorState>
+            <Annotorious>
+              <TextAnnotationDesktop {...props} />
+            </Annotorious>
+          </ColorState>
+        </FilterState>
+      </AuthorColorProvider>
     </PluginProvider>
-  );
-};
+  )
+
+}
