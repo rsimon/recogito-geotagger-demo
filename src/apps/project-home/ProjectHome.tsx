@@ -53,7 +53,7 @@ export const ProjectHome = (props: ProjectHomeProps) => {
 
   useEffect(() => {
     if (!tab && projectPolicies) {
-      if (isAdmin || props.project.is_open_edit) {
+      if (isAdmin || project.is_open_edit) {
         setTab('documents');
       } else {
         setTab('assignments');
@@ -162,6 +162,7 @@ export const ProjectHome = (props: ProjectHomeProps) => {
         onSwitchTab={handleSwitchTab}
         onGotoSettings={handleGotoSettings}
         onGotoUsers={handleGotoUsers}
+        showTabs={!props.project.is_open_edit}
       />
       <div className='project-home' style={{ marginTop: isAdmin ? 240 : 190 }}>
         <ToastProvider>
@@ -176,7 +177,7 @@ export const ProjectHome = (props: ProjectHomeProps) => {
               setDocuments={onSetDocuments}
               onRemoveDocument={removeDocumentFromAssignments}
             />
-          ) : (
+          ) : tab === 'assignments' ? (
             <AssignmentsView
               i18n={props.i18n}
               project={project}
@@ -188,6 +189,8 @@ export const ProjectHome = (props: ProjectHomeProps) => {
               setAssignments={setAssignments}
               availableLayers={props.availableLayers}
             />
+          ) : (
+            <div />
           )}
           <Toast
             content={toast}

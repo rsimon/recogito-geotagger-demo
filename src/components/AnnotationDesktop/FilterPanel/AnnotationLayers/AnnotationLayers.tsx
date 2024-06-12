@@ -1,5 +1,6 @@
-import { Check, Stack } from '@phosphor-icons/react';
+import { Check, Stack, EyeSlash } from '@phosphor-icons/react';
 import * as Checkbox from '@radix-ui/react-checkbox';
+import * as Switch from '@radix-ui/react-switch';
 import type { SupabaseAnnotation } from '@recogito/annotorious-supabase';
 import type { DocumentLayer, Translations } from 'src/Types';
 import { useFilterSettingsState } from '../FilterState';
@@ -20,9 +21,9 @@ export const AnnotationLayers = (props: AnnotationLayersProps) => {
 
   const { t } = props.i18n;
 
-  const active = props.layers?.find(l => l.is_active);
+  const active = props.layers?.find((l) => l.is_active);
 
-  const readOnly = props.layers?.filter(l => !l.is_active) || [];
+  const readOnly = props.layers?.filter((l) => !l.is_active) || [];
 
   const { layerSettings, setLayerSettings } = useFilterSettingsState();
 
@@ -35,26 +36,49 @@ export const AnnotationLayers = (props: AnnotationLayersProps) => {
     let next: Set<string>;
 
     if (layerSettings?.state) {
-      next = new Set(checked
-        ? [...layerSettings.state, layerId ]
-        : layerSettings.state.filter(id => id !== layerId));
+      next = new Set(
+        checked
+          ? [...layerSettings.state, layerId]
+          : layerSettings.state.filter((id) => id !== layerId)
+      );
     } else {
       // State currently undefined
-      next = new Set(checked 
-        ? [layerId] 
-        : [active.id, ...readOnly.map(l => l.id)].filter(id => id !== layerId));
+      next = new Set(
+        checked
+          ? [layerId]
+          : [active.id, ...readOnly.map((l) => l.id)].filter(
+              (id) => id !== layerId
+            )
+      );
     }
 
     // All selected?
     if (next.size === readOnly.length + 1) {
       setLayerSettings(undefined);
     } else {
-      const filter = (a: SupabaseAnnotation) => Boolean(a.layer_id) && next.has(a.layer_id!);
+      const filter = (a: SupabaseAnnotation) =>
+        Boolean(a.layer_id) && next.has(a.layer_id!);
       setLayerSettings({ state: [...next], filter });
     }
-  }
+  };
 
-  return active && (
+  return props.layers?.length === 1 && active ? (
+    <section className="filters-annotationlayers single-layer">
+      <label htmlFor="hide-annotations">
+        <EyeSlash size={18} /> {t['Hide Annotations']}
+      </label>
+
+      <Switch.Root 
+        className="switch-root" 
+        id="hide-annotations"
+        checked={!isChecked(active.id)}
+        onCheckedChange={checked => 
+          onCheckedChange(active.id, !checked)
+        }>
+        <Switch.Thumb className="switch-thumb" />
+      </Switch.Root>
+    </section>
+  ) : active ? (
     <section className="filters-annotationlayers">
       <h2>
         <Stack size={18} /> {t['Annotation Layers']}
@@ -68,10 +92,11 @@ export const AnnotationLayers = (props: AnnotationLayersProps) => {
             id="active-layer"
             className="checkbox-root"
             checked={isChecked(active.id)}
-            onCheckedChange={checked => onCheckedChange(active.id, checked as boolean)}>
-
+            onCheckedChange={checked =>
+              onCheckedChange(active.id, checked as boolean)
+            }>
             <Checkbox.Indicator>
-              <Check size={14} weight="bold" />
+              <Check size={14} weight='bold' />
             </Checkbox.Indicator>
           </Checkbox.Root>
 
@@ -84,16 +109,19 @@ export const AnnotationLayers = (props: AnnotationLayersProps) => {
       {readOnly.length > 0 && (
         <section>
           <h3>{t['Read-Only']}</h3>
+
           <ul>
-            {readOnly.map(l => (
+            {readOnly.map((l) => (
               <li key={l.id}>
                 <Checkbox.Root
                   id={`layer-${l.id}`}
                   className="checkbox-root"
                   checked={isChecked(l.id)}
-                  onCheckedChange={checked => onCheckedChange(l.id, checked as boolean)}>
+                  onCheckedChange={(checked) =>
+                    onCheckedChange(l.id, checked as boolean)
+                  }>
                   <Checkbox.Indicator>
-                    <Check size={14} weight="bold" />
+                    <Check size={14} weight='bold' />
                   </Checkbox.Indicator>
                 </Checkbox.Root>
 
@@ -106,6 +134,6 @@ export const AnnotationLayers = (props: AnnotationLayersProps) => {
         </section>
       )}
     </section>
-  )
+  ) : null;
 
 }

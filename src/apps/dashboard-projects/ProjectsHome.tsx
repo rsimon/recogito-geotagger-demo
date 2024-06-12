@@ -92,15 +92,31 @@ export const ProjectsHome = (props: ProjectsHomeProps) => {
   // Filtered projects
   const myProjects = projects.filter((p) => p.created_by?.id === me.id);
 
+  const openJoinProjects = me.isOrgAdmin
+    ? projects.filter((p) => me.id !== p.created_by?.id && p.is_open_join)
+    : projects.filter(
+        (p) =>
+          me.id !== p.created_by?.id &&
+          p.is_open_join &&
+          p.users.filter((u) => u.user.id === me.id).length === 0
+      );
+
   const sharedProjects = isReader
     ? projects.filter(({ created_by, users }) =>
         users.find((user) => user.user.id === me.id && me.id !== created_by?.id)
       )
-    : projects.filter((p) => p.created_by?.id !== me.id && !p.is_open_join);
-
-  const openJoinProjects = me.isOrgAdmin
-    ? projects.filter((p) => p.is_open_join)
-    : projects.filter((p) => p.is_open_join && p.contexts.length === 0);
+    : me.isOrgAdmin
+    ? projects.filter(
+        (p) =>
+          p.created_by?.id !== me.id &&
+          p.users.filter((u) => u.user.id === me.id).length === 0 &&
+          !p.is_open_join
+      )
+    : projects.filter(
+        (p) =>
+          p.created_by?.id !== me.id &&
+          p.users.filter((u) => u.user.id === me.id).length > 0
+      );
 
   const allProjects = me.isOrgAdmin
     ? projects
@@ -175,7 +191,7 @@ export const ProjectsHome = (props: ProjectsHomeProps) => {
     <ToastProvider>
       <div className='dashboard-projects-home'>
         <TopBar
-          invitations={props.invitations}
+          invitations={invitations}
           i18n={props.i18n}
           onError={onError}
           projects={projects}
@@ -183,6 +199,7 @@ export const ProjectsHome = (props: ProjectsHomeProps) => {
           showNotifications={true}
           onInvitationAccepted={onInvitationAccepted}
           onInvitationDeclined={onInvitationDeclined}
+          isCreator={!isReader}
         />
         <Header
           i18n={props.i18n}
