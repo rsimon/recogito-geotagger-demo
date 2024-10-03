@@ -170,7 +170,7 @@ export interface DocumentContext {
 
   project_id: string;
 
-  is_project_default: boolean;
+  is_project_default?: boolean;
 
   layer_contexts?: any;
 }
@@ -178,13 +178,7 @@ export interface DocumentContext {
 export interface DocumentLayer {
   id: string;
 
-  is_active: boolean;
-
-  document_id: string;
-}
-
-export interface Layer {
-  id: string;
+  is_active?: boolean;
 
   document_id: string;
 
@@ -192,12 +186,20 @@ export interface Layer {
 
   name?: string;
 
-  description?: string;
-
-  is_active_layer: boolean;
+  context?: DocumentContext;
 }
 
-export interface LayerWithDocument extends Layer {
+export interface EmbeddedLayer {
+  id: string;
+
+  name?: string;
+
+  is_active?: boolean;
+}
+
+export type Layer = DocumentLayer | EmbeddedLayer;
+
+export interface LayerWithDocument extends DocumentLayer {
   document: Document;
 }
 
@@ -375,12 +377,29 @@ export interface Invitation {
   ignored?: boolean;
 }
 
+export interface JoinRequest {
+  id: string;
+
+  created_at: string;
+
+  user_id: string;
+
+  project_id: string;
+
+  accepted?: boolean;
+
+  ignored?: boolean;
+
+  user: UserProfile;
+}
+
 export type TableName =
   | 'bodies'
   | 'documents'
   | 'contexts'
   | 'layers'
   | 'projects'
+  | 'project_documents'
   | 'targets';
 
 export type OperationType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE';
@@ -395,4 +414,23 @@ export type LoginMethod = {
   type: 'username_password' | 'saml' | 'oauth' | 'magic_link' | 'keycloak';
 
   domain: string;
+};
+
+export type GroupMember = {
+  user: {
+    id: string;
+    nickname: string;
+    first_name: string;
+    last_name: string;
+    avatar_url: string;
+  };
+  in_group: string;
+  since: string;
+};
+
+export type ApiPostInviteUserToProject = {
+  users: { email: string; projectGroupId: string }[];
+  projectId: string;
+  projectName: string;
+  invitedBy: string;
 };

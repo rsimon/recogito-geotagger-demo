@@ -1,10 +1,10 @@
-
 .document-card-image-container {
   width: 200px;
   height: 200px;
 }
 
 .document-card-image-container img {
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
   object-fit: cover;
 }
 

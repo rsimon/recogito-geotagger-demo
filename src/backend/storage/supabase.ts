@@ -1,4 +1,4 @@
-import Uppy, { UploadResult } from '@uppy/core';
+import Uppy, { type UploadResult } from '@uppy/core';
 import XHR from '@uppy/xhr-upload';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -38,9 +38,15 @@ export const uploadFile = (
           onProgress && onProgress(progress);
         });
 
+        uppy.on('error', error => {
+          reject(error);
+        });
+
         uppy.upload().then(result => {
           resolve(result);
-        });
+        }).catch(error => {
+          reject(error);
+        })
       }
     }
   });

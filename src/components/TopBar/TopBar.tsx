@@ -1,4 +1,6 @@
+import { AccountActions } from '@components/AccountActions';
 import { Notifications } from '@components/Notifications';
+import config from 'src/config.json';
 import type {
   Invitation,
   Translations,
@@ -6,17 +8,14 @@ import type {
   MyProfile,
 } from 'src/Types';
 
-import config from 'src/config.json';
-import { AccountActions } from '@components/AccountActions';
-
 import './TopBar.css';
 
 interface TopBarProps {
   i18n: Translations;
-  invitations: Invitation[];
-  me: MyProfile;
 
-  projects: ExtendedProjectData[];
+  invitations: Invitation[];
+
+  me: MyProfile;
 
   onError(error: string): void;
 
@@ -37,9 +36,17 @@ export const TopBar = (props: TopBarProps) => {
     <div className='top-bar-container'>
       <header>
         <div className='top-bar-branding'>
-          <div className='top-bar-platform'>
+          <img
+            src={
+              config.branding.top_logo && config.branding.top_logo !== ''
+                ? `/img/${config.branding.top_logo}`
+                : '/img/recogito-studio-logo.svg'
+            }
+            height={40}
+          />
+          {/* <div className='top-bar-platform'>
             {config.branding.platform_name}
-          </div>
+          </div> */}
           <div className='top-bar-separator'></div>
           <div className='top-bar-site_name'>{config.branding.site_name}</div>
         </div>

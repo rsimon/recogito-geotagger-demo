@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
-import { ArrowLeft } from '@phosphor-icons/react';
 import { updateMyProfile } from '@backend/crud/profiles';
 import { supabase } from '@backend/supabaseBrowserClient';
-import { Toast, ToastContent, ToastProvider } from '@components/Toast';
-import type { Translations, MyProfile } from 'src/Types';
+import { Avatar } from '@components/Avatar';
+import { Toast, ToastProvider } from '@components/Toast';
+import type { ToastContent } from '@components/Toast';
+import { TopBar } from '@components/TopBar';
+import type { Translations, MyProfile, Invitation } from 'src/Types';
 import { getGravatar } from './getGravatar';
 
 import './AccountPreferences.css';
-import { Avatar } from '@components/Avatar';
 
 interface AccountPreferencesProps {
 
   i18n: Translations;
+
+  invitations: Invitation[];
 
   profile: MyProfile;
 
@@ -20,7 +23,7 @@ interface AccountPreferencesProps {
 
 export const AccountPreferences = (props: AccountPreferencesProps) => {
 
-  const { lang, t } = props.i18n;
+  const { t } = props.i18n;
 
   const { profile } = props;
 
@@ -31,6 +34,13 @@ export const AccountPreferences = (props: AccountPreferencesProps) => {
   useEffect(() => {
     getGravatar(profile.email).then(setGravatar);
   }, []);
+
+  const onError = (error: string) =>
+    setError({
+      title: t['Something went wrong'],
+      description: t[error] || error,
+      type: 'error',
+    });
 
   const formik = useFormik({
     initialValues: {
@@ -50,22 +60,29 @@ export const AccountPreferences = (props: AccountPreferencesProps) => {
             type: 'error' 
           });
         } else {
-          setError({ 
-            title: t['Profile updated'], 
-            type: 'success' 
-          });
+          // Note: unlike window.history.back(), this also reloads the page.
+          // If we use .back(), the profile nag dialog would pop up again
+          // even if the user has just set a name.
+          window.location.href = document.referrer;
         }
       });
     }
   });
 
+  const onCancel = () => 
+    window.location.href = document.referrer;
+
   return (
     <ToastProvider>
       <div className="dashboard-account-preferences">
+        <TopBar
+          i18n={props.i18n}
+          invitations={props.invitations}
+          onError={onError}
+          me={profile}
+          showNotifications={true} />
+
         <main>
-          <a href={`/${lang}/projects`}>
-            <ArrowLeft className="text-bottom" size={16} /><span>Back</span>
-          </a>
           <h1>{t['Your User Profile']}</h1>
           <form onSubmit={formik.handleSubmit}>
             <fieldset>
@@ -98,9 +115,10 @@ export const AccountPreferences = (props: AccountPreferencesProps) => {
             </fieldset>
 
             <h2>{t['Public Information']}</h2>
-            <span>
+
+            <p className="public-information-hint">
               {t['Other users can see this information about you. All fields are optional.']}
-            </span>
+            </p>
 
             <fieldset>
               <div className="field">
@@ -152,7 +170,20 @@ export const AccountPreferences = (props: AccountPreferencesProps) => {
               </div>
             </fieldset>
 
-            <button className="primary" type="submit">Submit</button>
+            <div className="actions">
+              <button 
+                className="unstyled"
+                type="button"
+                onClick={onCancel}>
+                {t['Cancel']}
+              </button>
+              
+              <button 
+                className="primary" 
+                type="submit">
+                {t['Save']}
+              </button>
+            </div>
           </form>
         </main>
       </div>

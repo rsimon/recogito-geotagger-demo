@@ -4,6 +4,7 @@
   flex-direction: row;
   align-items: center;
   height: 64px;
+  font-size: var(--font-tiny);
   border-bottom: 1px solid var(--gray-200);
 }
 
@@ -15,6 +16,19 @@
 .project-entry-description {
   color: var(--gray-600);
   width: 30%;
+}
+
+.project-entry-description-entry {
+  display: block;
+  display: -webkit-box;
+  height: 3.2em;
+  line-clamp: 2;
+  line-height: 150%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .project-entry-assignments-with-docs {

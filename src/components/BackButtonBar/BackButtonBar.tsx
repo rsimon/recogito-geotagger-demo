@@ -1,9 +1,9 @@
-import type { Translations } from "src/Types"
-import { ArrowLeft, CaretRight } from "@phosphor-icons/react";
+import { useState } from 'react';
+import { ArrowLeft, CaretRight } from '@phosphor-icons/react';
+import { LoadingOverlay } from '@components/LoadingOverlay';
+import type { Translations } from 'src/Types';
 
 import './BackButtonBar.css';
-import { useState } from "react";
-import { LoadingOverlay } from "@components/LoadingOverlay";
 
 interface BackButtonBarProps {
   i18n: Translations;
@@ -25,7 +25,7 @@ export const BackButtonBar = (props: BackButtonBarProps) => {
           window.location.href = `/${props.i18n.lang}/projects`;
         }}
         >
-          <ArrowLeft style={{ paddingRight: 7 }} />
+          <ArrowLeft size={18} />
           {props.i18n.t['Back to Projects']}
         </div>
 

@@ -31,8 +31,12 @@ export const PluginGalleryItem = (props: PluginGalleryItemProps) => {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    console.log('fetching image');
     import(`../../../../plugins/${plugin.directory}/thumbnail.jpg`)
-      .then(data => setImage(data.default));
+      .then(data => {
+        console.log('async result', data);
+        setImage(data.default)
+      });
   }, []);
 
   const onInstall = () => {
@@ -79,7 +83,9 @@ export const PluginGalleryItem = (props: PluginGalleryItemProps) => {
         )}
 
         <div className="thumbnail">
-          <img src={image} />
+          {image && (
+            <img src={image.src} />
+          )}
         </div>
 
         <div className="description">

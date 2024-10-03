@@ -7,15 +7,17 @@ import { AnnotationPopup } from '@components/AnnotationDesktop/AnnotationPopup';
 import type { SupabaseAnnotation } from '@recogito/annotorious-supabase';
 import { useFilter } from '@components/AnnotationDesktop/FilterPanel/FilterState';
 import type { DocumentLayer, Policies, Translations } from 'src/Types';
-import {
+import type {
   AnnotoriousOpenSeadragonAnnotator,
   DrawingStyleExpression,
   ImageAnnotation,
+  PresentUser
+} from '@annotorious/react';
+import {
   OpenSeadragonAnnotator,
-  OpenSeadragonPopup,
+  OpenSeadragonAnnotationPopup,
   OpenSeadragonViewer,
-  PointerSelectAction,
-  PresentUser,
+  UserSelectAction,
   useAnnotator
 } from '@annotorious/react';
 
@@ -100,15 +102,20 @@ export const AnnotatedImage = forwardRef<OpenSeadragon.Viewer, AnnotatedImagePro
   }), [props.imageManifestURL]);
 
   const selectAction = (annotation: SupabaseAnnotation) => {
-    // Annotation targets are editable for creators and admins
-    const isActiveLayer = annotation.layer_id === props.activeLayer?.id;
+    // Directly after creation, annotations have no
+    // layer_id (because it gets added later through 
+    // the storage plugin).
+    const isActiveLayer = 
+      annotation.layer_id === undefined ||
+      annotation.layer_id === props.activeLayer?.id;
 
     const me = annoRef.current?.getUser();
 
+    // Annotation targets are editable for creators and admins
     const canEdit = isActiveLayer && (
       annotation.target.creator?.id === me?.id || policies.get('layers').has('INSERT'));
 
-    return canEdit ? PointerSelectAction.EDIT : PointerSelectAction.SELECT;
+    return canEdit ? UserSelectAction.EDIT : UserSelectAction.SELECT;
   }
 
   useEffect(() => {
@@ -124,7 +131,7 @@ export const AnnotatedImage = forwardRef<OpenSeadragon.Viewer, AnnotatedImagePro
     <OpenSeadragonAnnotator
       autoSave
       drawingEnabled={drawingEnabled}
-      pointerSelectAction={selectAction}
+      userSelectAction={selectAction}
       tool={props.tool || 'rectangle'}
       filter={filter}
       style={props.style}>
@@ -154,7 +161,7 @@ export const AnnotatedImage = forwardRef<OpenSeadragon.Viewer, AnnotatedImagePro
         options={options} />
 
       {props.usePopup && (
-        <OpenSeadragonPopup
+        <OpenSeadragonAnnotationPopup
           popup={props => (
             <AnnotationPopup
               {...props}

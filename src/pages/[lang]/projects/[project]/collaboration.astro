@@ -1,7 +1,11 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { createSupabaseServerClient } from '@backend/supabaseServerClient';
-import { listPendingInvitations, getMyProfile } from '@backend/crud';
+import {
+  listPendingInvitations,
+  listPendingRequests,
+  getMyProfile,
+} from '@backend/crud';
 import { getProjectExtended } from '@backend/helpers';
 import { getLangFromUrl, getTranslations } from '@i18n';
 import { ProjectCollaboration } from '@apps/project-collaboration';
@@ -11,20 +15,20 @@ const lang = getLangFromUrl(Astro.url);
 
 const i18n = getTranslations(Astro.request, 'project-collaboration');
 
-const supabase = await createSupabaseServerClient(Astro.request, Astro.cookies);
-if (!supabase) return Astro.redirect(`/${lang}/sign-in`);
+const supabase = await createSupabaseServerClient(Astro.cookies);
 
 const projectId = Astro.params.project;
 
 const profile = await getMyProfile(supabase);
 if (profile.error || !profile.data) {
-  const error = await fetch(`${Astro.url}/500`);
-  return new Response(error.body, { headers: error.headers, status: 500 });
+  return Astro.redirect(`/${lang}/sign-in`);
 }
 
 const project = await getProjectExtended(supabase, projectId as string);
 
 const invitations = await listPendingInvitations(supabase, projectId as string);
+
+const requests = await listPendingRequests(supabase, projectId as string);
 
 if (project.error || invitations.error) {
   const error = await fetch(`${Astro.url}/404`);
@@ -40,11 +44,12 @@ const projects = await listMyProjectsExtended(supabase);
 
 <BaseLayout title='Team'>
   <ProjectCollaboration
-    client:load
+    client:only='react'
     i18n={i18n}
     me={profile.data}
     project={project.data}
     invitations={invitations.data}
+    requests={requests.data}
     projects={projects.data}
     user={profile.data}
   />

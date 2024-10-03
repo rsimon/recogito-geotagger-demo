@@ -1,8 +1,7 @@
 .dashboard-projects-home {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
+  min-height: 100%;
 }
 
 .dashboard-projects-empty {

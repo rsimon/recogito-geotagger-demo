@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Trash } from '@phosphor-icons/react';
+import * as Label from '@radix-ui/react-label';
+import * as RadioGroup from '@radix-ui/react-radio-group';
 import {
   clearProjectTagVocabulary,
   getProjectTagVocabulary,
@@ -7,36 +10,30 @@ import {
   deleteInstalledPlugin,
   updatePluginSettings,
 } from '@backend/helpers';
+import { GetPlugins } from '@apps/project-plugins/GetPlugins';
 import { supabase } from '@backend/supabaseBrowserClient';
 import { Button } from '@components/Button';
-import { SaveState, TinySaveIndicator } from '@components/TinySaveIndicator';
-import { Toast, ToastContent, ToastProvider } from '@components/Toast';
+import { TopBar } from '@components/TopBar';
+import { BackButtonBar } from '@components/BackButtonBar';
+import { type SaveState, TinySaveIndicator } from '@components/TinySaveIndicator';
+import { Toast, type ToastContent, ToastProvider } from '@components/Toast';
+import { SettingsHeader } from './SettingsHeader';
+import type { PluginMetadata, PluginInstallationConfig } from '@components/Plugins';
+import { Extension } from '@components/Plugins';
 import type {
   ExtendedProjectData,
   Invitation,
   Translations,
   MyProfile,
 } from 'src/Types';
-import * as Label from '@radix-ui/react-label';
-import { TopBar } from '@components/TopBar';
-import { BackButtonBar } from '@components/BackButtonBar';
-import * as RadioGroup from '@radix-ui/react-radio-group';
 
 import './ProjectSettings.css';
-import { SettingsHeader } from './SettingsHeader';
-import {
-  PluginMetadata,
-  PluginInstallationConfig,
-  Extension,
-} from '@components/Plugins';
-import { Trash } from '@phosphor-icons/react';
-import { GetPlugins } from '@apps/project-plugins/GetPlugins';
 
 interface ProjectSettingsProps {
   invitations: Invitation[];
-  projects: ExtendedProjectData[];
 
   me: MyProfile;
+  
   i18n: Translations;
 
   project: ExtendedProjectData;
@@ -247,7 +244,6 @@ export const ProjectSettings = (props: ProjectSettingsProps) => {
         invitations={props.invitations}
         i18n={props.i18n}
         onError={onError}
-        projects={props.projects}
         me={props.me}
       />
       <BackButtonBar
@@ -367,7 +363,7 @@ export const ProjectSettings = (props: ProjectSettingsProps) => {
                           className='project-settings-label-detail text-body-large-bold'
                           htmlFor='firstName'
                         >
-                          {t['Project Visibility']}
+                          {t['Project Type']}
                         </Label.Root>
                         <RadioGroup.Root
                           className='project-settings-radio-group-root'

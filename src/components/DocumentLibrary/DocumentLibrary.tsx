@@ -13,7 +13,7 @@ import {
   SelectClickTypes,
 } from '@table-library/react-table-library/select';
 import './DocumentLibrary.css';
-import type { TableNode } from '@table-library/react-table-library';
+import type { TableNode } from '@table-library/react-table-library/types/table';
 import { useTheme } from '@table-library/react-table-library/theme';
 import { getTheme } from '@table-library/react-table-library/baseline';
 import type { Action } from '@table-library/react-table-library/types/common';
@@ -24,6 +24,7 @@ import { PublicWarningMessage } from './PublicWarningMessage';
 import { DocumentTable } from './DocumentTable';
 import { CollectionDocumentActions } from './CollectionDocumentActions';
 import { CheckCircle } from '@phosphor-icons/react';
+import { LoadingOverlay } from '@components/LoadingOverlay';
 
 export type LibraryDocument = Pick<
   Document,
@@ -55,11 +56,13 @@ export interface DocumentLibraryProps {
   UploadActions: React.ReactNode;
   onDocumentsSelected(documentIds: string[]): void;
   onUpdated(document: Document): void;
-  onDelete(document: Document): void;
+  onDeleteFromLibrary?(document: Document): void;
   onTogglePrivate(document: Document): void;
   onError(error: string): void;
   isAdmin: boolean | undefined;
 }
+
+const DOCUMENTS_PER_FETCH = 1000;
 
 export const DocumentLibrary = (props: DocumentLibraryProps) => {
   const { t } = props.i18n;
@@ -83,6 +86,7 @@ export const DocumentLibrary = (props: DocumentLibraryProps) => {
     Document | undefined
   >();
   const [publicWarningOpen, setPublicWarningOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleTogglePrivate = (document: Document) => {
     if (document.is_private) {
@@ -176,13 +180,45 @@ export const DocumentLibrary = (props: DocumentLibraryProps) => {
 
   useEffect(() => {
     async function getDocuments() {
-      const resp = await supabase
+      setLoading(true);
+      const countResp = await supabase
         .from('documents')
-        .select(
-          'id,created_at,created_by,updated_at,updated_by,name,bucket_id,content_type,meta_data, is_private, collection_id, collection_metadata'
-        );
+        .select('*', { count: 'exact', head: true });
 
-      setDocuments(resp.data);
+      if (countResp.error) {
+        console.log('Error retrieving document count');
+        setLoading(false);
+        setDocuments([]);
+      } else {
+        let docs: LibraryDocument[] = [];
+
+        let start = 0;
+        const iterations = Math.ceil(
+          (countResp?.count || 0) / DOCUMENTS_PER_FETCH
+        );
+        for (let i = 0; i < iterations; i++) {
+          const docsResp = await supabase
+            .from('documents')
+            .select(
+              'id,created_at,created_by,updated_at,updated_by,name,bucket_id,content_type,meta_data, is_private, collection_id, collection_metadata'
+            )
+            .range(start, start + DOCUMENTS_PER_FETCH - 1);
+
+          if (docsResp.error) {
+            console.error('Error retrieving documents: ', docsResp.error);
+
+            setLoading(false);
+            setDocuments(docs);
+            return;
+          }
+
+          docs = [...docs, ...docsResp.data];
+          start += DOCUMENTS_PER_FETCH;
+        }
+
+        setLoading(false);
+        setDocuments(docs);
+      }
     }
 
     if (!documents) {
@@ -305,7 +341,9 @@ export const DocumentLibrary = (props: DocumentLibraryProps) => {
           <DocumentActions
             i18n={props.i18n}
             onDelete={() =>
-              currentDocument ? props.onDelete(currentDocument) : {}
+              props.onDeleteFromLibrary
+                ? props.onDeleteFromLibrary(item as Document)
+                : {}
             }
             showPrivate={true}
             isPrivate={item.is_private}
@@ -352,7 +390,9 @@ export const DocumentLibrary = (props: DocumentLibraryProps) => {
           <DocumentActions
             i18n={props.i18n}
             onDelete={() =>
-              currentDocument ? props.onDelete(currentDocument) : {}
+              currentDocument && props.onDeleteFromLibrary
+                ? props.onDeleteFromLibrary(currentDocument)
+                : {}
             }
             isAdmin={item.created_by === props.user.id}
             onEditMetadata={() => {
@@ -574,6 +614,7 @@ export const DocumentLibrary = (props: DocumentLibraryProps) => {
 
   return (
     <>
+      {loading && props.open && <LoadingOverlay />}
       <Dialog.Root open={props.open}>
         <Dialog.Portal>
           <Dialog.Overlay className='dialog-overlay' />
